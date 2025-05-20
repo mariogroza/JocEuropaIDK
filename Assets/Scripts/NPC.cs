@@ -39,9 +39,18 @@ public class NPC : MonoBehaviour, IInteractable
 
         nameText.SetText(dialogueData.npcName);
         portraitImage.sprite = dialogueData.npcPortrait;
-            
-        dialoguePanel.SetActive(true);
 
+        // Check for alternate dialogues
+        foreach (var alt in dialogueData.alternateDialogues)
+        {
+            if (StoryState.Instance.HasFlag(alt.requiredFlag))
+            {
+                dialogueData.dialogueLines = alt.lines;
+                break;
+            }
+        }
+
+        dialoguePanel.SetActive(true);
         StartCoroutine(TypeLine());
     }
 
@@ -90,5 +99,7 @@ public class NPC : MonoBehaviour, IInteractable
         dialogueText.SetText("");
         dialoguePanel.SetActive(false);
 
+        if (!string.IsNullOrEmpty(dialogueData.onDialogueCompleteFlag))
+            StoryState.Instance.SetFlag(dialogueData.onDialogueCompleteFlag);
     }
 }

@@ -15,10 +15,17 @@ MonoBehaviour:
   npcName: Blue
   npcPortrait: {fileID: -4178046375966092550, guid: 80f76b2ebecce4544b0bbdd5647ad994, type: 3}
   dialogueLines:
-  - Alcool te rog!
-  - TE ROOOOG!!!!
+  - Bravo, ai vorbit cu Verde
   autoProgressLines: 0101
   autoProgressDelay: 1.5
   typingSpeed: 0.05
+  onDialogueCompleteFlag: TalkedToNpc1
   voiceSound: {fileID: 0}
   voicePitch: 1
+  alternateDialogues:
+  - requiredFlag: TalkedToNpc2
+    lines:
+    - Bravo, ai vorbit cu Verde
+  - requiredFlag: TalkedToNpc2 1
+    lines:
+    - penis albastru
