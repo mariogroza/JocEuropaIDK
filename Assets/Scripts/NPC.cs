@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,9 +9,18 @@ public class NPC : MonoBehaviour, IInteractable
     public GameObject dialoguePanel;
     public TMP_Text dialogueText, nameText;
     public Image portraitImage;
+    public TMP_InputField inputField;
 
     private int dialogueIndex;
-    private bool isTyping, isDialogueActive;
+    private bool isTyping, isDialogueActive, awaitingInput;
+
+    private Movement playerController;
+
+    void Awake()
+    {
+        playerController = FindFirstObjectByType<Movement>();
+        inputField.gameObject.SetActive(false);
+    }
 
     public bool canInteract()
     {
@@ -20,9 +29,9 @@ public class NPC : MonoBehaviour, IInteractable
 
     public void interact()
     {
-        //no dialogue data
-        if (dialogueData == null)
+        if (dialogueData == null || awaitingInput)
             return;
+
         if (isDialogueActive)
         {
             NextLine();
@@ -32,6 +41,7 @@ public class NPC : MonoBehaviour, IInteractable
             StartDialogue();
         }
     }
+
     void StartDialogue()
     {
         isDialogueActive = true;
@@ -40,12 +50,13 @@ public class NPC : MonoBehaviour, IInteractable
         nameText.SetText(dialogueData.npcName);
         portraitImage.sprite = dialogueData.npcPortrait;
 
-        // Check for alternate dialogues
         foreach (var alt in dialogueData.alternateDialogues)
         {
             if (StoryState.Instance.HasFlag(alt.requiredFlag))
             {
                 dialogueData.dialogueLines = alt.lines;
+                dialogueData.requiresInput = alt.requiresInput;
+                dialogueData.expectedAnswers = alt.expectedAnswers;
                 break;
             }
         }
@@ -85,19 +96,69 @@ public class NPC : MonoBehaviour, IInteractable
 
         isTyping = false;
 
-        if (dialogueData.autoProgressLines.Length > dialogueIndex && dialogueData.autoProgressLines[dialogueIndex]) 
+        if (dialogueData.requiresInput.Length > dialogueIndex && dialogueData.requiresInput[dialogueIndex])
+        {
+            awaitingInput = true;
+            inputField.gameObject.SetActive(true);
+            inputField.text = "";
+            inputField.ActivateInputField();
+
+            if (playerController != null)
+                playerController.enabled = false;
+
+            yield break;
+        }
+
+        if (dialogueData.autoProgressLines.Length > dialogueIndex && dialogueData.autoProgressLines[dialogueIndex])
         {
             yield return new WaitForSeconds(dialogueData.autoProgressDelay);
             NextLine();
         }
     }
 
+    void Update()
+    {
+        if (awaitingInput && Input.GetKeyDown(KeyCode.Return))
+        {
+            string userAnswer = inputField.text.Trim().ToUpperInvariant();
+            string expected = dialogueData.expectedAnswers[dialogueIndex].Trim().ToUpperInvariant();
+
+            if (userAnswer == expected)
+            {
+                inputField.gameObject.SetActive(false);
+                if (playerController != null)
+                    playerController.enabled = true;
+
+                dialogueText.text = "Raspuns corect. Felicitari.";
+                awaitingInput = false;
+                StartCoroutine(WaitThenContinue());
+            }
+            else
+            {
+                dialogueText.text = "Raspuns gresit. Incearca din nou.";
+                inputField.text = "";
+                inputField.ActivateInputField();
+            }
+        }
+    }
+
+    IEnumerator WaitThenContinue()
+    {
+        yield return new WaitForSeconds(dialogueData.autoProgressDelay);
+        NextLine();
+    }
+
     public void EndDialogue()
     {
         StopAllCoroutines();
         isDialogueActive = false;
+        awaitingInput = false;
         dialogueText.SetText("");
         dialoguePanel.SetActive(false);
+        inputField.gameObject.SetActive(false);
+
+        if (playerController != null)
+            playerController.enabled = true;
 
         if (!string.IsNullOrEmpty(dialogueData.onDialogueCompleteFlag))
             StoryState.Instance.SetFlag(dialogueData.onDialogueCompleteFlag);

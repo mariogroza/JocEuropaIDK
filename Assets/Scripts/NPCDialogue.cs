@@ -1,15 +1,21 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "NewNPCDialogue", menuName ="NPC Dialogue")]
+
     
 [System.Serializable]
 public class ConditionalDialogue
 {
     public string requiredFlag;
     public string[] lines;
+    public string[] expectedAnswers;
+    public bool[] requiresInput;
 }
+[CreateAssetMenu(fileName = "NewNPCDialogue", menuName = "NPC Dialogue")]
 public class NPCDialogue : ScriptableObject
 {
+    public string[] expectedAnswers;
+    public bool[] requiresInput;
+
     public string npcName;
     public Sprite npcPortrait;
     public string[] dialogueLines;
