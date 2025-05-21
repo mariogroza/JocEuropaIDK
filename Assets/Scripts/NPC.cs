@@ -129,23 +129,42 @@ public class NPC : MonoBehaviour, IInteractable
                 if (playerController != null)
                     playerController.enabled = true;
 
-                dialogueText.text = "Raspuns corect. Felicitari.";
                 awaitingInput = false;
-                StartCoroutine(WaitThenContinue());
+                StartCoroutine(ShowCorrectThenContinue());
             }
             else
             {
-                dialogueText.text = "Raspuns gresit. Incearca din nou.";
-                inputField.text = "";
-                inputField.ActivateInputField();
+                StartCoroutine(ShowIncorrectThenRetry());
             }
         }
     }
 
-    IEnumerator WaitThenContinue()
+    IEnumerator ShowCorrectThenContinue()
     {
+        yield return StartCoroutine(TypeMessage("Raspuns corect! Felicitari"));
         yield return new WaitForSeconds(dialogueData.autoProgressDelay);
         NextLine();
+    }
+
+    IEnumerator ShowIncorrectThenRetry()
+    {
+        dialogueText.text = "Raspuns gresit. Incearca din nou.";
+        yield return new WaitForSeconds(1.5f);
+        StartCoroutine(TypeLine());
+    }
+
+    IEnumerator TypeMessage(string message)
+    {
+        isTyping = true;
+        dialogueText.SetText("");
+
+        foreach (char letter in message)
+        {
+            dialogueText.text += letter;
+            yield return new WaitForSeconds(dialogueData.typingSpeed);
+        }
+
+        isTyping = false;
     }
 
     public void EndDialogue()

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: RedDialogue3
   m_EditorClassIdentifier: 
   expectedAnswers:
-  - PU NE OBLIGA SA VORBIM ENGELZA
+  - UP NE OBLIGA SA VORBIM DOAR ENGLEZA
   requiresInput: 01
   npcName: Red
   npcPortrait: {fileID: -855298285791758126, guid: 30a010aa1d8025341a9bb70e3f5b6d98, type: 3}
